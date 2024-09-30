@@ -1,0 +1,182 @@
+# Carregamento das livrarias
+import scipy
+import pulp
+import os
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+# Conectar com o drive
+from google.colab import drive
+drive.mount('/content/drive')
+
+
+# Racional do problema
+# Definicao dos problemas
+# Caixas (I): Conjunto de caixas disponíveis para serem alocadas.
+# Ondas (J): Conjunto de ondas de produção que podem ser usadas para alocar as caixas.
+# Itens (K): Itens contidos nas caixas.
+# Peso das Caixas (p[i]): Número de peças na caixa por cada SKU.
+# Capacidade da Onda (c): A capacidade máxima de peças que uma onda pode suportar (2000 peças).
+
+# Variavel de decisao
+# Xij = Se a caixa I esta alocada na onda J
+# Yj = A onda da caixa esta ativa ?
+# Zkj = Se o item K da caixa I esta alocado na onda J
+
+# Modelo heurística baseia-se na iteracao onde cada caixa I deve ser alocado a onda J com o maximo de 2000 pecas uma vez que temos isso a nova onda inicia-se.
+# Se a caixa for alocada temos Xij = 1 e Yj = 1.
+# Posteriormente quando temos a Zkj = 1 significa que todos os itens da caixa estao alocadas as ondas
+
+
+# Importar dados
+df = pd.read_excel('/content/drive/My Drive/20240928_TestePO.xlsx')
+print(df.head())
+
+# Total de linhas
+len(df)
+
+# Total de linhas e colunas
+df.shape
+
+# Resumo da base
+#print(df.describe())
+
+# Informações gerais do DataFrame
+#print(df.info())
+
+
+# Composicao caixas
+# Transformando os dados em uma matriz com caixas nas linhas e itens (produtos) nas colunas
+df_pivot = df.pivot_table(index='Caixa Id', columns='Item', values='Peças', aggfunc='sum', fill_value=0)
+
+# Exibir a matriz criada
+df_pivot
+
+# Total de pecas por caixa
+df_pivot['Total Peças'] = df_pivot.sum(axis=1)
+print(df_pivot)
+   #total_pecas_por_caixa = df_pivot.sum(axis=1)
+#print(f'Total de peças por caixa:\n{total_pecas_por_caixa}')
+
+
+# Criar matriz diagonal
+caixas_unicas = df['Caixa Id'].unique()
+caixas_unicas
+
+produtos_unicos = df['Item'].unique()
+produtos_unicos
+
+matriz_diagonal = np.zeros((len(caixas_unicas), len(produtos_unicos)))
+matriz_diagonal
+
+# Rotina para criar matriz
+def matriz_decisao(n):
+  matriz = [[0] * n for _ in range(n)]
+  for i in range(n):
+    matriz[i][i] = 1
+  return matriz
+
+matriz_decisao(5)
+
+
+# Extrair informacoes de caixas e pecas
+caixas = df['Caixa Id'].unique()  # Conjunto de caixas
+caixas_pecas = df.groupby('Caixa Id')['Peças'].sum().to_dict()  # Total de peças por caixa
+caixas_itens = df.groupby('Caixa Id')['Item'].apply(list).to_dict()  # Itens por caixa
+
+# Definindo a capacidade máxima de cada onda
+capacidade_max = 2000
+
+
+# Listas para armazenar as ondas e os itens que aparecem em cada onda
+ondas = []
+itens_em_onda = {}
+
+# Função para adicionar caixas a uma onda respeitando a capacidade
+def alocar_caixas_em_onda(caixas, capacidade_max, caixas_pecas, caixas_itens):
+    # Lista de ondas, onde cada onda é um par (lista de caixas, capacidade restante)
+    ondas = []
+    itens_em_onda = {}
+
+    # Criação da primeira onda
+    onda_atual = []
+    capacidade_atual = capacidade_max
+
+    for caixa in caixas:
+        pecas_caixa = caixas_pecas[caixa]
+
+        # Se a caixa cabe na onda atual, adiciona à onda
+        if capacidade_atual >= pecas_caixa:
+            onda_atual.append(caixa)
+            capacidade_atual -= pecas_caixa  # Atualiza a capacidade restante
+
+        # Se a caixa não cabe na onda atual, fecha a onda e cria uma nova
+        else:
+            ondas.append((onda_atual, capacidade_max - capacidade_atual))  # Salva a onda anterior
+            onda_atual = [caixa]  # Começa uma nova onda com a caixa atual
+            capacidade_atual = capacidade_max - pecas_caixa  # Atualiza capacidade restante
+
+        # Atribui os itens da caixa à onda correspondente
+        for item in caixas_itens[caixa]:
+            if item not in itens_em_onda:
+                itens_em_onda[item] = []
+            itens_em_onda[item].append(len(ondas))  # Marca em qual onda o item apareceu
+
+    # Adicionar a última onda após o loop
+    if onda_atual:
+        ondas.append((onda_atual, capacidade_max - capacidade_atual))
+
+    return ondas, itens_em_onda
+
+# Chama a função de alocação
+ondas, itens_em_onda = alocar_caixas_em_onda(caixas, capacidade_max, caixas_pecas, caixas_itens)
+
+# Resultados
+print(f"Total de ondas necessárias: {len(ondas)}")
+for i, (onda, capacidade_restante) in enumerate(ondas):
+    print(f"Onda {i + 1}: Caixas = {onda}, Capacidade restante = {capacidade_restante} peças")
+
+# exportar resultados
+export_df = pd.DataFrame(ondas)
+print(export_df)
+
+#export_df.to_excel('ondas.xlsx', index=False)
+
+
+# Extrair o total de peças por onda e número de caixas
+pecas_por_onda = [sum(caixas_pecas[caixa] for caixa in onda[0]) for onda in ondas]
+num_caixas_por_onda = [len(onda[0]) for onda in ondas]
+
+# Plotar o gráfico de barras: Número de caixas por onda
+plt.figure(figsize=(10, 6))
+plt.bar(range(1, len(ondas) + 1), num_caixas_por_onda, color='skyblue')
+plt.title('Composição de Caixas por Ondas')
+plt.xlabel('Onda')
+plt.ylabel('Número de Caixas')
+plt.xticks(range(1, len(ondas) + 1))  # Números das ondas
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.show()
+
+# Plotar o gráfico de barras: Total de peças por onda
+plt.figure(figsize=(10, 6))
+plt.bar(range(1, len(ondas) + 1), pecas_por_onda, color='lightgreen')
+plt.title('Total de Peças por Ondas')
+plt.xlabel('Onda')
+plt.ylabel('Total de Peças')
+plt.xticks(range(1, len(ondas) + 1))  # Números das ondas
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.show()
+
+# Exportar arquivo para a maquina local
+df_final = export_df
+df_final
+
+# Especifique o caminho onde deseja salvar o arquivo
+caminho = r'C:\Users\Thales.pr\Documents\Python\df_final.xlsx'  # Ajuste o caminho conforme necessário
+
+# Salve o DataFrame como um arquivo Excel
+df_final.to_excel(caminho, index=False)
+print(f'Arquivo salvo em: {caminho}')
