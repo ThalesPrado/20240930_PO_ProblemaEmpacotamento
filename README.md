@@ -1,16 +1,16 @@
-Otimização da Organização de Ondas de Produção com Limitação de Capacidade: Um Modelo Baseado em Programação Linear Inteira
+Otimização da Organização de Ondas de Produção com Limitação de Capacidade: Uma Abordagem Heurística gananciosa.
 
 Introdução
 
-A organização eficiente de processos de produção é fundamental para garantir alta produtividade e redução de custos em ambientes industriais. Um dos desafios mais comuns em fábricas e centros de distribuição é organizar produtos em "ondas de produção" (batches) de forma a otimizar o uso de recursos e minimizar os custos operacionais.
+A organização eficiente de ondas de produção em ambientes industriais é um desafio que exige a alocação otimizada de itens em lotes de produção, respeitando limitações de capacidade. Esse problema surge em fábricas, centros de distribuição e operações logísticas, onde a otimização de recursos e a minimização de complexidade são essenciais para garantir produtividade e redução de custos.
 
-Neste projeto, estudamos um problema clássico de organização de ondas de produção, no qual itens (produtos) devem ser alocados em caixas (ou lotes) de produção respeitando uma capacidade máxima de 2000 peças por lote. O objetivo é organizar esses produtos em um número mínimo de ondas, de modo que cada item apareça no menor número de ondas possível. A solução proposta será baseada em um modelo de programação linear inteira (PLI), que visa a otimização do processo, respeitando restrições de capacidade e garantindo que cada item seja processado ao menos uma vez.
+Neste projeto, buscamos resolver o problema de organização de itens (produtos) em caixas ou lotes de produção, respeitando uma capacidade máxima de 2000 peças por lote, utilizando uma metodologia heurística gulosa. A heurística gulosa foi escolhida pela sua simplicidade e eficiência computacional, garantindo soluções rápidas, mesmo em problemas de grande escala, sem necessariamente garantir a solução ótima, mas fornecendo boas soluções em um tempo viável.
 
 Motivação
 
-A minimização da quantidade de ondas de produção é essencial para evitar a dispersão de itens em diferentes lotes, o que pode aumentar o tempo de setup de máquinas, custos de logística interna e a complexidade de planejamento. Além disso, lotes otimizados tendem a melhorar a utilização da capacidade produtiva, reduzindo o tempo ocioso das máquinas e maximizando o throughput.
+Resolver o problema de organização de ondas de produção utilizando métodos exatos pode ser computacionalmente muito caro, especialmente quando o número de itens e caixas é grande. Métodos exatos, como a programação linear inteira, têm a vantagem de garantir a solução ótima, porém, seu tempo de execução aumenta exponencialmente com o tamanho do problema. Heurísticas gulosas são uma alternativa prática para lidar com problemas dessa magnitude, oferecendo soluções rápidas e satisfatórias em cenários reais, onde as decisões precisam ser tomadas rapidamente.
 
-Esse problema é comum em indústrias de manufatura, logística e distribuição, onde os recursos são limitados e a otimização de lotes é uma ferramenta chave para ganhos operacionais. Nosso projeto se concentra no desenvolvimento de um modelo matemático preciso, que pode ser aplicado a diversos setores industriais.
+O uso de uma abordagem heurística gulosa visa minimizar a dispersão dos itens em múltiplas ondas, otimizando o uso da capacidade disponível em cada lote e organizando os itens de forma a reduzir a complexidade do processo de produção.
 
 1. Objetivo: Minimização das Ondas de Produção
 O objetivo principal é minimizar o número total de ondas, onde cada item deve ser alocado de maneira a aparecer no menor número possível de ondas:
