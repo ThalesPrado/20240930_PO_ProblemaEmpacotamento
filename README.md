@@ -51,7 +51,9 @@ Essa restrição assegura que a quantidade total de peças alocadas a uma determ
 As variáveis de decisão são binárias, indicando se os itens e as ondas foram ativados ou não:
 
 Xij {0,1} -> Indica se o item i está presente na onda j
+
 Yi {0,1} -> Indica se a onda j está ativada
+
 Zkj {0,1} -> Indica se a caixa k foi alocada à onda j
 
 4. Resultados Esperados
